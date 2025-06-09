@@ -1,0 +1,314 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XYZ Corp - AI Assistant</title>
+    <style>
+        :root {
+            --primary: #4285f4;
+            --secondary: #f1f3f4;
+            --text: #202124;
+            --bot-bg: #f8f9fa;
+            --user-bg: #e8f0fe;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+        }
+        
+        #chat-container {
+            width: 380px;
+            height: 600px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: white;
+        }
+        
+        #chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        #chat-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        #chat-header .status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        #chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: var(--secondary);
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .bot-message {
+            background: var(--bot-bg);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+        
+        .user-message {
+            background: var(--user-bg);
+            color: var(--primary);
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .message-time {
+            display: block;
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        #input-area {
+            display: flex;
+            padding: 12px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        #user-input:focus {
+            border-color: var(--primary);
+        }
+        
+        #send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #send-btn:hover {
+            background: #3367d6;
+        }
+        
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .quick-reply {
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-reply:hover {
+            background: var(--secondary);
+            border-color: var(--primary);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 10px 14px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #ccc;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">
+            <h2>XYZ Corp Assistant</h2>
+            <span class="status">Online</span>
+        </div>
+        
+        <div id="chat-messages">
+            <div class="message bot-message">
+                Hello! I'm your virtual assistant. How can I help you today?
+                <span class="message-time">Just now</span>
+            </div>
+            
+            <div class="quick-replies">
+                <div class="quick-reply" onclick="sendQuickReply(this)">What products do you offer?</div>
+                <div class="quick-reply" onclick="sendQuickReply(this)">How can I contact you?</div>
+                <div class="quick-reply" onclick="sendQuickReply(this)">What are your business hours?</div>
+            </div>
+        </div>
+        
+        <div id="input-area">
+            <input id="user-input" type="text" placeholder="Type your message..." autocomplete="off">
+            <button id="send-btn" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function addMessage(sender, message) {
+            const messagesDiv = document.getElementById('chat-messages');
+            
+            // Remove typing indicator if present
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) typingIndicator.remove();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                ${message}
+                <span class="message-time">${timeString}</span>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const messagesDiv = document.getElementById('chat-messages');
+            
+            // Remove existing indicator if any
+            const existing = document.querySelector('.typing-indicator');
+            if (existing) existing.remove();
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            
+            messagesDiv.appendChild(indicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function sendQuickReply(button) {
+            const message = button.textContent;
+            document.getElementById('user-input').value = message;
+            sendMessage();
+        }
+        
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage('user', message);
+            userInput.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                
+                // Add bot response
+                addMessage('bot', data.response);
+                
+                // Add quick replies if needed
+                if (data.intent === 'unknown') {
+                    const quickReplies = document.createElement('div');
+                    quickReplies.className = 'quick-replies';
+                    quickReplies.innerHTML = `
+                        <div class="quick-reply" onclick="sendQuickReply(this)">Our products</div>
+                        <div class="quick-reply" onclick="sendQuickReply(this)">Contact information</div>
+                        <div class="quick-reply" onclick="sendQuickReply(this)">Business hours</div>
+                    `;
+                    document.getElementById('chat-messages').appendChild(quickReplies);
+                }
+            } catch (error) {
+                addMessage('bot', "Sorry, I'm having trouble connecting. Please try again later.");
+                console.error('Error:', error);
+            }
+        }
+        
+        // Handle Enter key
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
